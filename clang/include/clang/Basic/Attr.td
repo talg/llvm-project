@@ -5174,3 +5174,13 @@ def NonString : InheritableAttr {
   let Subjects = SubjectList<[Var, Field]>;
   let Documentation = [NonStringDocs];
 }
+
+def DesugarMemberAccess : Attr {
+  let Spellings = [
+    GNU<"desugar_member_access">,
+    CXX11<"clang", "desugar_member_access">
+  ];
+  let Args = [StringArgument<"MacroName">];
+  let Subjects = SubjectList<[CXXRecord]>;
+  let Documentation = [Undocumented]; 
+}

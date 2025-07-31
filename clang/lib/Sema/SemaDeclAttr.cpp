@@ -6932,6 +6932,22 @@ static bool MustDelayAttributeArguments(const ParsedAttr &AL) {
   return false;
 }
 
+static void handleDesugarMemberAccessAttr(Sema &S, Decl *D, const ParsedAttr &AL) {
+  // Check that we have exactly one string argument
+  if (!AL.checkExactlyNumArgs(S, 1))
+    return;
+    
+  // Get the macro name argument
+  StringRef MacroName;
+  SourceLocation LiteralLoc;
+  if (!S.checkStringLiteralArgumentAttr(AL, 0, MacroName, &LiteralLoc))
+    return;
+    
+  // Create the attribute
+  D->addAttr(::new (S.Context) DesugarMemberAccessAttr(S.Context, AL, MacroName));
+}
+
+
 /// ProcessDeclAttribute - Apply the specific attribute to the specified decl if
 /// the attribute applies to decls.  If the attribute is a type attribute, just
 /// silently ignore it if a GNU attribute.
@@ -7056,6 +7072,9 @@ ProcessDeclAttribute(Sema &S, Scope *scope, Decl *D, const ParsedAttr &AL,
     // that do not list any subjects.
     S.Diag(AL.getLoc(), diag::err_attribute_invalid_on_decl)
         << AL << AL.isRegularKeywordAttribute() << D->getLocation();
+    break;
+  case ParsedAttr::AT_DesugarMemberAccess:
+    handleDesugarMemberAccessAttr(S, D, AL);
     break;
   case ParsedAttr::AT_Interrupt:
     handleInterruptAttr(S, D, AL);

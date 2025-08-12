@@ -15,6 +15,7 @@
 #include "DefinitionsInHeadersCheck.h"
 #include "HeaderIncludeCycleCheck.h"
 #include "IncludeCleanerCheck.h"
+#include "LfiTaintCheck.h"
 #include "MisleadingBidirectional.h"
 #include "MisleadingIdentifier.h"
 #include "MisplacedConstCheck.h"
@@ -50,6 +51,8 @@ public:
     CheckFactories.registerCheck<HeaderIncludeCycleCheck>(
         "misc-header-include-cycle");
     CheckFactories.registerCheck<IncludeCleanerCheck>("misc-include-cleaner");
+    CheckFactories.registerCheck<LfiTaintCheck>(
+        "misc-lfi-taint");
     CheckFactories.registerCheck<MisleadingBidirectionalCheck>(
         "misc-misleading-bidirectional");
     CheckFactories.registerCheck<MisleadingIdentifierCheck>(

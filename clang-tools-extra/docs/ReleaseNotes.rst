@@ -136,6 +136,11 @@ New checks
   Finds unintended character output from ``unsigned char`` and ``signed char``
   to an ``ostream``.
 
+- New :doc:`misc-lfi-taint
+  <clang-tidy/checks/misc/lfi-taint>` check.
+
+  FIXME: Write a short description.
+
 - New :doc:`portability-avoid-pragma-once
   <clang-tidy/checks/portability/avoid-pragma-once>` check.
 

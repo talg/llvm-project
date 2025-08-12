@@ -108,10 +108,12 @@ void addFIRToLLVMPass(mlir::PassManager &pm,
                       const MLIRToLLVMPassPipelineConfig &config) {
   fir::FIRToLLVMPassOptions options;
   options.ignoreMissingTypeDescriptors = ignoreMissingTypeDescriptors;
+  options.skipExternalRttiDefinition = skipExternalRttiDefinition;
   options.applyTBAA = config.AliasAnalysis;
   options.forceUnifiedTBAATree = useOldAliasTags;
   options.typeDescriptorsRenamedForAssembly =
       !disableCompilerGeneratedNamesConversion;
+  options.ComplexRange = config.ComplexRange;
   addPassConditionally(pm, disableFirToLlvmIr,
                        [&]() { return fir::createFIRToLLVMPass(options); });
   // The dialect conversion framework may leave dead unrealized_conversion_cast
@@ -205,6 +207,10 @@ void createDefaultFIROptimizerPassPipeline(mlir::PassManager &pm,
   pm.addPass(fir::createPolymorphicOpConversion());
   pm.addPass(fir::createAssumedRankOpConversion());
 
+  // Optimize redundant array repacking operations,
+  // if the source is known to be contiguous.
+  if (pc.OptLevel.isOptimizingForSpeed())
+    pm.addPass(fir::createOptimizeArrayRepacking());
   pm.addPass(fir::createLowerRepackArraysPass());
   // Expand FIR operations that may use SCF dialect for their
   // implementation. This is a mandatory pass.
@@ -310,13 +316,13 @@ void createOpenMPFIRPassPipeline(mlir::PassManager &pm,
     pm.addPass(flangomp::createDoConcurrentConversionPass(
         opts.doConcurrentMappingKind == DoConcurrentMappingKind::DCMK_Device));
 
-  // The MapsForPrivatizedSymbols pass needs to run before
-  // MapInfoFinalizationPass because the former creates new
-  // MapInfoOp instances, typically for descriptors.
-  // MapInfoFinalizationPass adds MapInfoOp instances for the descriptors
-  // underlying data which is necessary to access the data on the offload
-  // target device.
+  // The MapsForPrivatizedSymbols and AutomapToTargetDataPass pass need to run
+  // before MapInfoFinalizationPass because they create new MapInfoOp
+  // instances, typically for descriptors. MapInfoFinalizationPass adds
+  // MapInfoOp instances for the descriptors underlying data which is necessary
+  // to access the data on the offload target device.
   pm.addPass(flangomp::createMapsForPrivatizedSymbolsPass());
+  pm.addPass(flangomp::createAutomapToTargetDataPass());
   pm.addPass(flangomp::createMapInfoFinalizationPass());
   pm.addPass(flangomp::createMarkDeclareTargetPass());
   pm.addPass(flangomp::createGenericLoopConversionPass());
@@ -357,6 +363,8 @@ void createDefaultFIRCodeGenPassPipeline(mlir::PassManager &pm,
     framePointerKind = mlir::LLVM::framePointerKind::FramePointerKind::NonLeaf;
   else if (config.FramePointerKind == llvm::FramePointerKind::All)
     framePointerKind = mlir::LLVM::framePointerKind::FramePointerKind::All;
+  else if (config.FramePointerKind == llvm::FramePointerKind::Reserved)
+    framePointerKind = mlir::LLVM::framePointerKind::FramePointerKind::Reserved;
   else
     framePointerKind = mlir::LLVM::framePointerKind::FramePointerKind::None;
 

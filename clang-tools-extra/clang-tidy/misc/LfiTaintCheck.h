@@ -18,14 +18,15 @@ namespace clang::tidy::misc {
 /// For the user-facing documentation see:
 /// http://clang.llvm.org/extra/clang-tidy/checks/misc/lfi-taint.html
 class LfiTaintCheck : public ClangTidyCheck {
-public:
-  LfiTaintCheck(StringRef Name, ClangTidyContext *Context)
-      : ClangTidyCheck(Name, Context) {}
-  void registerMatchers(ast_matchers::MatchFinder *Finder) override;
-  void check(const ast_matchers::MatchFinder::MatchResult &Result) override;
-  bool isLanguageVersionSupported(const LangOptions &LangOpts) const override {
-    return LangOpts.CPlusPlus;
-  }
+  public:
+    LfiTaintCheck(StringRef Name, ClangTidyContext *Context)
+        : ClangTidyCheck(Name, Context) {}
+    void registerMatchers(ast_matchers::MatchFinder *Finder) override;
+    void check(const ast_matchers::MatchFinder::MatchResult &Result) override;
+    bool isLanguageVersionSupported(const LangOptions &LangOpts) const override {
+      return LangOpts.C99 || LangOpts.C11 || LangOpts.C17 || LangOpts.C23;
+    };
+
 };
 
 } // namespace clang::tidy::misc

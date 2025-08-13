@@ -1,14 +1,12 @@
-// RUN: %check_clang_tidy %s misc-lfi-taint %t
+// RUN: %check_clang_tidy %s misc-lfi-taint %t -- -- -std=c99
 
-// FIXME: Add something that triggers the check here.
-void f();
-// CHECK-MESSAGES: :[[@LINE-1]]:6: warning: function 'f' is insufficiently awesome [misc-lfi-taint]
+#define TAINTED(sandbox) __attribute__((annotate("tainted:" #sandbox)))
 
-// FIXME: Verify the applied fix.
-//   * Make the CHECK patterns specific enough and try to make verified lines
-//     unique to avoid incorrect matches.
-//   * Use {{}} for regular expressions.
-// CHECK-FIXES: {{^}}void awesome_f();{{$}}
+// CHECK-MESSAGES: :[[@LINE+1]]:{{.*}} found tainted variable 'x' with annotation 'tainted:jpeg'
+TAINTED(jpeg) int x;
 
-// FIXME: Add something that doesn't trigger the check here.
-void awesome_f2();
+// CHECK-MESSAGES: :[[@LINE+1]]:{{.*}} found tainted variable 'y' with annotation 'tainted:png'
+TAINTED(png) int y;
+
+// Should not trigger
+int normal_var;
